@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chamada de Pacientes — UBS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#0b1220; --card:#121b2e; --card2:#18233a; --txt:#f1f5f9; --muted:#94a3b8;
+    --ok:#22c55e; --err:#ef4444; --borda:#24314d; --azul:#2563eb; --prior:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .hidden{display:none!important}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--err);margin-right:6px;vertical-align:middle}
+  .dot.on{background:var(--ok)}
+
+  /* ================= PAINEL (TV) ================= */
+  #painel{display:grid;grid-template-rows:auto 1fr auto;height:100vh;padding:2vh 3vw;gap:2vh}
+  .p-topo{display:flex;justify-content:space-between;align-items:center}
+  .p-topo h1{font-size:3.2vh;font-weight:700;letter-spacing:.5px}
+  .p-relogio{font-size:4.5vh;font-weight:700;font-variant-numeric:tabular-nums}
+  .p-data{font-size:2vh;color:var(--muted);text-align:right}
+  .p-corpo{display:grid;grid-template-columns:2.2fr 1fr;gap:2vw;min-height:0}
+  .p-atual{background:var(--card);border-radius:3vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4vh 3vw;border:4px solid transparent;transition:border-color .3s}
+  .p-atual .rot{font-size:3vh;color:var(--muted);text-transform:uppercase;letter-spacing:4px}
+  .p-atual .nome{font-size:9vh;font-weight:800;line-height:1.1;margin:3vh 0;word-break:break-word}
+  .p-atual .setor{font-size:4vh;font-weight:700;padding:1.2vh 3vw;border-radius:100px;color:#fff}
+  .p-atual .local{font-size:3.4vh;margin-top:2.5vh;color:var(--muted)}
+  .p-atual .local b{color:var(--txt)}
+  .p-atual.vazio .nome{font-size:5vh;color:var(--muted);font-weight:600}
+  .piscar{animation:piscar 1s ease-in-out 4}
+  @keyframes piscar{0%,100%{transform:scale(1)}50%{transform:scale(1.03);box-shadow:0 0 60px rgba(255,255,255,.25)}}
+  .p-hist{background:var(--card);border-radius:3vh;padding:3vh 1.5vw;display:flex;flex-direction:column;min-height:0}
+  .p-hist h2{font-size:2.6vh;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin-bottom:2vh;text-align:center}
+  .p-hist ul{list-style:none;display:flex;flex-direction:column;gap:1.4vh;overflow:hidden}
+  .p-hist li{background:var(--card2);border-radius:1.5vh;padding:1.5vh 1.2vw;border-left:8px solid #555}
+  .p-hist li .n{font-size:3vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .p-hist li .s{font-size:2.1vh;color:var(--muted);margin-top:.4vh}
+  .p-rodape{display:flex;justify-content:space-between;font-size:1.8vh;color:var(--muted)}
+  #iniciar{position:fixed;inset:0;background:rgba(5,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:10;text-align:center;padding:20px}
+  #iniciar button{font-size:28px;padding:22px 48px;border:0;border-radius:16px;background:var(--azul);color:#fff;font-weight:700;cursor:pointer}
+  #iniciar p{color:var(--muted);max-width:520px;line-height:1.5}
+
+  /* ================= TELAS DE TRABALHO ================= */
+  .tela{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+  .c-topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+  .c-topo h1{font-size:20px}
+  .c-status{font-size:13px;color:var(--muted)}
+  .c-card{background:var(--card);border:1px solid var(--borda);border-radius:16px;padding:18px;margin-bottom:16px}
+  .c-card.destaque{border-width:3px}
+  label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  select,input[type=text],input[type=password]{width:100%;font-size:18px;padding:13px;border-radius:10px;border:1px solid var(--borda);background:var(--card2);color:var(--txt);outline:none}
+  select:focus,input:focus{border-color:#3b82f6}
+  .campo{margin-bottom:14px}
+  .niveis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+  .niveis input{position:absolute;opacity:0;pointer-events:none}
+  .niveis label{margin:0;text-align:center;padding:12px 6px;border-radius:10px;border:2px solid var(--borda);background:var(--card2);color:var(--txt);cursor:pointer;font-size:16px}
+  .niveis input:checked + label{border-color:var(--cor);background:color-mix(in srgb, var(--cor) 22%, var(--card2))}
+  .niveis input:focus-visible + label{outline:2px solid #3b82f6}
+  .dica{font-size:12px;color:var(--muted);margin-bottom:16px}
+  .btn{width:100%;font-size:20px;font-weight:800;padding:16px;border:0;border-radius:12px;color:#fff;cursor:pointer;background:var(--azul);letter-spacing:.5px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-sec{background:var(--card2);border:1px solid var(--borda);color:var(--txt);padding:10px 14px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:600;white-space:nowrap}
+  .btn-sec:hover{border-color:#3b82f6}
+  .btn-sec:disabled{opacity:.45;cursor:not-allowed}
+  .btn-x{background:transparent;border:1px solid var(--borda);color:#f87171;width:38px;height:38px;border-radius:8px;cursor:pointer;font-size:16px;flex:none}
+  h2.sec{font-size:15px;color:var(--muted);margin-bottom:12px;font-weight:700}
+  h3.grupo{font-size:15px;margin:16px 0 8px;padding-left:10px;border-left:5px solid #555}
+  h3.grupo:first-child{margin-top:0}
+  .lista{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .lista li{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card2);padding:10px 12px;border-radius:10px}
+  .lista li.proximo{outline:2px solid #3b82f6}
+  .info{min-width:0}
+  .info .n{font-weight:700;overflow-wrap:anywhere}
+  .info .h{font-size:13px;color:var(--muted);margin-top:2px}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-right:6px;vertical-align:middle;text-transform:uppercase}
+  .tag-prioritario{background:var(--prior);color:#111}
+  .tag-urgencia{background:var(--err);color:#fff}
+  .lista li.urgente{box-shadow:inset 4px 0 0 var(--err)}
+  .acoes-li{display:flex;gap:8px;align-items:center;flex:none}
+  @media (max-width:560px){ .lista li{flex-wrap:wrap} .acoes-li{width:100%;justify-content:flex-end} }
+  .mini-sel{width:auto;font-size:14px;padding:8px}
+  .vazio{color:var(--muted);font-size:14px}
+  .atual-nome{font-size:26px;font-weight:800;margin-bottom:4px;overflow-wrap:anywhere}
+  .mini{font-size:13px;color:var(--muted)}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .encaminhar{display:flex;gap:8px;margin-top:10px}
+  .encaminhar select{font-size:15px;padding:10px}
+  details summary{cursor:pointer;color:var(--muted);font-weight:600}
+  .rodape-links{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:20px;font-size:13px}
+  .rodape-links a{color:var(--muted)}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 18px;border-radius:12px;font-weight:700;z-index:20;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  #toast.ok{background:#14532d;color:#bbf7d0}
+  #toast.erro{background:#7f1d1d;color:#fecaca}
+
+  /* ================= LOGIN ================= */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+  .login-card{background:var(--card);border:1px solid var(--borda);border-radius:16px;padding:28px;width:100%;max-width:380px}
+  .login-card h1{font-size:20px;margin-bottom:4px}
+  .login-card p{margin-bottom:18px}
+  .login-card .btn{margin-top:14px}
+  .erro-txt{color:#f87171;font-weight:600;margin-top:10px;min-height:1em}
+</style>
+</head>
+<body>
+
+<div id="toast" class="hidden"></div>
+
+<!-- ============ LOGIN ============ -->
+<div id="login" class="hidden">
+  <form class="login-card" id="formLogin">
+    <h1 class="nomeUbs"></h1>
+    <p class="mini" id="lModo"></p>
+    <label for="lSenha">Senha da unidade</label>
+    <input id="lSenha" type="password" autocomplete="current-password" required>
+    <button class="btn" type="submit" id="lBtn">Entrar</button>
+    <div class="erro-txt" id="lErro"></div>
+    <p class="mini" style="margin:12px 0 0">A senha fica salva neste aparelho.</p>
+  </form>
+</div>
+
+<!-- ============ PAINEL DA TV ============ -->
+<div id="iniciar" class="hidden">
+  <h2 style="font-size:32px">Painel de Chamadas</h2>
+  <button id="btnIniciar">▶ Iniciar painel</button>
+  <p>O navegador só libera o som depois de um clique. Clique uma vez ao ligar a TV; o painel entra em tela cheia e fica pronto para falar os nomes.</p>
+</div>
+
+<div id="painel" class="hidden">
+  <div class="p-topo">
+    <h1 class="nomeUbs"></h1>
+    <div><div class="p-relogio" id="pRelogio">--:--</div><div class="p-data" id="pData"></div></div>
+  </div>
+  <div class="p-corpo">
+    <div class="p-atual vazio" id="pAtual">
+      <div class="rot">Paciente</div>
+      <div class="nome" id="pNome">Aguardando chamadas…</div>
+      <div class="setor hidden" id="pSetor"></div>
+      <div class="local hidden" id="pLocal"></div>
+    </div>
+    <div class="p-hist">
+      <h2>Últimas chamadas</h2>
+      <ul id="pHist"></ul>
+    </div>
+  </div>
+  <div class="p-rodape">
+    <span><span class="dot"></span><span class="statusTxt">Conectando…</span></span>
+    <span>Aguarde ser chamado(a) pelo nome</span>
+  </div>
+</div>
+
+<!-- ============ RECEPÇÃO ============ -->
+<div id="recepcao" class="tela hidden">
+  <div class="c-topo">
+    <h1><span class="nomeUbs"></span> · Recepção</h1>
+    <div class="c-status"><span class="dot"></span><span class="statusTxt">Conectando…</span></div>
+  </div>
+
+  <form class="c-card" id="rForm">
+    <div class="campo">
+      <label for="rNome">Nome do paciente</label>
+      <input id="rNome" type="text" autocomplete="off" placeholder="Digite ou cole o nome do PEC">
+    </div>
+    <div class="campo">
+      <label for="rDestino">Encaminhar para</label>
+      <select id="rDestino"></select>
+    </div>
+    <label>Classificação</label>
+    <div class="niveis" id="rNivel"></div>
+    <div class="dica">Prioritário: idoso 60+, gestante, lactante, PcD, autista, criança de colo, obeso, mobilidade reduzida. Urgência: caso agudo que não pode esperar.</div>
+    <button class="btn" type="submit" id="rBtn">➕ Adicionar à fila</button>
+  </form>
+
+  <div class="c-card">
+    <h2 class="sec">Fila de espera</h2>
+    <div id="rFila"></div>
+  </div>
+
+  <div class="c-card">
+    <h2 class="sec">Chamados agora</h2>
+    <ul class="lista" id="rChamados"></ul>
+  </div>
+
+  <nav class="rodape-links"></nav>
+</div>
+
+<!-- ============ CHAMADA (profissionais) ============ -->
+<div id="chamar" class="tela hidden">
+  <div class="c-topo">
+    <h1><span class="nomeUbs"></span> · Chamada</h1>
+    <div class="c-status"><span class="dot"></span><span class="statusTxt">Conectando…</span></div>
+  </div>
+
+  <div class="c-card">
+    <label for="cSetor">Quem está chamando</label>
+    <select id="cSetor"></select>
+  </div>
+
+  <div class="c-card destaque hidden" id="cAtualCard">
+    <h2 class="sec">Em atendimento</h2>
+    <div class="atual-nome" id="cAtualNome"></div>
+    <div class="mini" id="cAtualInfo"></div>
+    <div class="acoes">
+      <button class="btn-sec" id="cRechamar">🔁 Chamar de novo</button>
+      <button class="btn-sec" id="cConcluir">✓ Concluir atendimento</button>
+    </div>
+    <div class="encaminhar">
+      <select id="cEncDestino" title="Setor"></select>
+      <select id="cEncNivel" title="Classificação" style="max-width:150px"></select>
+      <button class="btn-sec" id="cEncaminhar">➜ Encaminhar</button>
+    </div>
+  </div>
+
+  <div class="c-card">
+    <button class="btn" id="cProximo">📢 CHAMAR PRÓXIMO</button>
+    <h2 class="sec" id="cFilaTit" style="margin-top:18px">Fila de espera</h2>
+    <ul class="lista" id="cFila"></ul>
+  </div>
+
+  <details class="c-card">
+    <summary>Chamar paciente que não está na fila</summary>
+    <form id="cManual" style="margin-top:12px">
+      <input id="cManualNome" type="text" autocomplete="off" placeholder="Nome do paciente">
+      <button class="btn-sec" type="submit" style="margin-top:10px;width:100%">📢 Chamar</button>
+    </form>
+  </details>
+
+  <nav class="rodape-links"></nav>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — edite somente este bloco
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: 'https://SEU-PROJETO.supabase.co',
+  SUPABASE_ANON_KEY: 'COLE_AQUI_A_CHAVE_ANON',
+
+  // Identificador da unidade (pode ser simples). A senha é definida no arquivo SQL.
+  CODIGO_UBS: 'ubs-minha-unidade',
+
+  NOME_UBS: 'UBS — Unidade Básica de Saúde',
+  REPETIR_VOZ: 2,          // quantas vezes o nome é falado
+  VELOCIDADE_VOZ: 0.9,     // 0.5 (lento) a 1.5 (rápido)
+  HISTORICO_TV: 6,         // nomes mostrados em "Últimas chamadas"
+
+  // Cada linha é um setor. 'fala' é o final da frase: "Maria da Silva, dirija-se + fala".
+  // O primeiro da lista é o destino padrão na recepção.
+  // Se houver dois médicos ao mesmo tempo, crie um setor para cada consultório.
+  SETORES: [
+    { id:'triagem',     nome:'Triagem',          local:'Sala de Triagem',           fala:'à sala de triagem',            cor:'#2563eb' },
+    { id:'medico',      nome:'Consulta Médica',  local:'Consultório Médico',        fala:'ao consultório médico',        cor:'#16a34a' },
+    { id:'prenatal',    nome:'Pré-Natal',        local:'Consultório de Enfermagem', fala:'ao consultório de enfermagem', cor:'#db2777' },
+    { id:'microscopia', nome:'Microscopia',      local:'Laboratório',               fala:'ao laboratório',               cor:'#ea580c' },
+    { id:'farmacia',    nome:'Farmácia',         local:'Farmácia',                  fala:'à farmácia',                   cor:'#7c3aed' },
+  ]
+};
+/* ===================================================================== */
+
+const $ = id => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const MODO = ['painel','recepcao'].includes(qs.get('modo')) ? qs.get('modo')
+           : ['#painel','#recepcao'].includes(location.hash) ? location.hash.slice(1) : 'chamar';
+const hora = ts => ts ? new Date(ts).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '';
+const hojeStr = () => new Date().toLocaleDateString('pt-BR');
+const setorPorId = id => CONFIG.SETORES.find(s => s.id === id) || {id, nome:id, local:id, fala:'', cor:'#555'};
+
+function lerLocal(chave, padrao){ try{ const v = localStorage.getItem(chave); return v ? JSON.parse(v) : padrao; }catch(e){ return padrao; } }
+function gravarLocal(chave, valor){ try{ localStorage.setItem(chave, JSON.stringify(valor)); }catch(e){} }
+
+// Cria elementos com segurança (nomes de pacientes nunca viram HTML)
+function el(tag, props = {}, ...filhos){
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)){
+    if (v == null) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on') || k in e) e[k] = v;
+    else e.setAttribute(k, v);
+  }
+  filhos.flat().forEach(f => { if (f != null && f !== false) e.append(f.nodeType ? f : String(f)); });
+  return e;
+}
+
+// "MARIA DA SILVA" -> "Maria da Silva" (ajuda a voz a ler direito)
+function formatarNome(t){
+  const minusc = ['da','de','do','das','dos','e'];
+  return (t || '').trim().replace(/\s+/g,' ').toLowerCase().split(' ')
+    .map((p,i) => (i > 0 && minusc.includes(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1))
+    .join(' ');
+}
+function espera(ts){
+  const m = Math.max(0, Math.round((Date.now() - new Date(ts)) / 60000));
+  return m < 60 ? `${m} min` : `${Math.floor(m/60)}h${String(m%60).padStart(2,'0')}`;
+}
+// Classificação: a fila é ordenada por esta lista (de cima para baixo) e depois por ordem de chegada
+const NIVEIS = [
+  { id:'urgencia',    nome:'Urgência',    cor:'#ef4444' },
+  { id:'prioritario', nome:'Prioritário', cor:'#f59e0b' },
+  { id:'normal',      nome:'Normal',      cor:'#64748b' },
+];
+const pesoNivel = n => { const i = NIVEIS.findIndex(x => x.id === n); return i < 0 ? NIVEIS.length : i; };
+const ordenar = lista => [...lista].sort((a,b) => (pesoNivel(a.nivel) - pesoNivel(b.nivel)) || (new Date(a.ordem) - new Date(b.ordem)));
+const opcoesNivel = atual => NIVEIS.map(n => el('option', {value:n.id, selected: n.id === atual}, n.nome));
+
+function toast(txt, tipo = 'ok'){
+  const t = $('toast'); t.textContent = txt; t.className = tipo;
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.className = 'hidden', 4500);
+}
+
+/* ------------------------- Supabase ------------------------- */
+const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+let SENHA = lerLocal('ubs-senha', '');
+
+async function api(fn, args = {}){
+  const {data, error} = await sb.rpc(fn, {p_senha: SENHA, ...args});
+  if (error){
+    if (/senha_invalida/.test(error.message || '')){ gravarLocal('ubs-senha', ''); location.reload(); }
+    throw error;
+  }
+  return data;
+}
+
+// O nome do canal em tempo real vem da senha: quem não sabe a senha não consegue ouvir nem enviar chamadas.
+async function nomeCanal(){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(CONFIG.CODIGO_UBS + '|' + SENHA));
+  return 'ubs-' + [...new Uint8Array(b)].slice(0, 12).map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+let canal = null, conectado = false, paineisOnline = 0;
+async function conectar(handlers = {}){
+  canal = sb.channel(await nomeCanal(), {
+    config: { broadcast: { self:false, ack:true }, presence: { key: MODO + '-' + Math.random().toString(36).slice(2,9) } }
+  });
+  canal.on('broadcast', {event:'chamada'}, ({payload}) => handlers.chamada && handlers.chamada(payload));
+  canal.on('broadcast', {event:'fila'}, () => handlers.fila && handlers.fila());
+  canal.on('presence', {event:'sync'}, () => {
+    paineisOnline = Object.values(canal.presenceState()).flat().filter(m => m.tipo === 'painel').length;
+    atualizarStatus();
+  });
+  canal.subscribe(st => {
+    conectado = st === 'SUBSCRIBED';
+    if (conectado && MODO === 'painel') canal.track({tipo:'painel', desde:Date.now()});
+    if (conectado && handlers.fila) handlers.fila();
+    atualizarStatus();
+  });
+}
+function atualizarStatus(){
+  let on = conectado, txt;
+  if (!conectado) txt = 'Sem conexão — tentando reconectar…';
+  else if (MODO === 'painel') txt = 'Conectado';
+  else { on = paineisOnline > 0; txt = on ? 'Conectado · painel da TV online' : 'Conectado · painel da TV DESLIGADO'; }
+  document.querySelectorAll('.dot').forEach(d => d.classList.toggle('on', on));
+  document.querySelectorAll('.statusTxt').forEach(s => s.textContent = txt);
+}
+async function avisarFila(){ try{ await canal.send({type:'broadcast', event:'fila', payload:{t:Date.now()}}); }catch(e){} }
+async function anunciar(nome, setor){
+  const payload = {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2,6), nome, ts: Date.now(),
+    setorId: setor.id, setorNome: setor.nome, local: setor.local, fala: setor.fala, cor: setor.cor
+  };
+  const r = await canal.send({type:'broadcast', event:'chamada', payload});
+  if (r !== 'ok') throw new Error('falha no envio');
+}
+
+/* ------------------------- Início / login ------------------------- */
+function montarRodape(){
+  const base = location.pathname;
+  document.querySelectorAll('.rodape-links').forEach(n => n.replaceChildren(
+    el('a', {href: base + '?modo=recepcao'}, 'Recepção'),
+    el('a', {href: base}, 'Chamada'),
+    el('a', {href: base + '?modo=painel', target:'_blank'}, 'Painel da TV'),
+    el('a', {href:'#', onclick: e => { e.preventDefault(); gravarLocal('ubs-senha',''); location.reload(); }}, 'Sair')
+  ));
+}
+
+async function iniciar(){
+  document.querySelectorAll('.nomeUbs').forEach(e => e.textContent = CONFIG.NOME_UBS);
+  montarRodape();
+  if (!SENHA) return mostrarLogin();
+  const {error} = await sb.rpc('fila_listar', {p_senha: SENHA});
+  if (error && /senha_invalida/.test(error.message || '')){ gravarLocal('ubs-senha',''); SENHA = ''; return mostrarLogin(); }
+  abrirModo();
+}
+
+function mostrarLogin(){
+  $('login').classList.remove('hidden');
+  $('lModo').textContent = {painel:'Painel da TV', recepcao:'Recepção', chamar:'Chamada de pacientes'}[MODO];
+  $('lSenha').focus();
+  $('formLogin').onsubmit = async e => {
+    e.preventDefault();
+    $('lBtn').disabled = true; $('lErro').textContent = '';
+    const tentativa = $('lSenha').value;
+    const {error} = await sb.rpc('fila_listar', {p_senha: tentativa});
+    $('lBtn').disabled = false;
+    if (error){
+      $('lErro').textContent = /senha_invalida/.test(error.message || '') ? 'Senha incorreta.'
+        : 'Não foi possível conectar. Verifique a internet e a configuração do Supabase.';
+      return;
+    }
+    SENHA = tentativa; gravarLocal('ubs-senha', SENHA);
+    $('login').classList.add('hidden');
+    abrirModo();
+  };
+}
+
+function abrirModo(){
+  if (MODO === 'painel') iniciarPainel();
+  else if (MODO === 'recepcao') iniciarRecepcao();
+  else iniciarChamar();
+}
+
+/* =====================================================================
+   PAINEL DA TV
+   ===================================================================== */
+function iniciarPainel(){
+  $('iniciar').classList.remove('hidden');
+  $('painel').classList.remove('hidden');
+
+  const tick = () => {
+    const d = new Date();
+    $('pRelogio').textContent = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    $('pData').textContent = d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long'});
+  };
+  tick(); setInterval(tick, 1000);
+
+  let hist = lerLocal('ubs-painel-hist', {dia:'', itens:[]});
+  if (hist.dia !== hojeStr()) hist = {dia:hojeStr(), itens:[]};
+  desenharHistorico();
+
+  function desenharHistorico(){
+    $('pHist').replaceChildren(...hist.itens.slice(0, CONFIG.HISTORICO_TV).map(c =>
+      el('li', {style:`border-left-color:${c.cor}`},
+        el('div', {class:'n'}, c.nome),
+        el('div', {class:'s'}, `${c.setorNome} · ${hora(c.ts)}`))));
+  }
+
+  let vozPt = null;
+  function carregarVozes(){
+    const v = speechSynthesis.getVoices();
+    vozPt = v.find(x => /pt[-_]BR/i.test(x.lang) && /google|francisca|maria|luciana|thalita/i.test(x.name))
+         || v.find(x => /pt[-_]BR/i.test(x.lang))
+         || v.find(x => /^pt/i.test(x.lang)) || null;
+  }
+  carregarVozes();
+  speechSynthesis.onvoiceschanged = carregarVozes;
+
+  function falar(texto){
+    return new Promise(fim => {
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang = 'pt-BR'; u.rate = CONFIG.VELOCIDADE_VOZ;
+      if (vozPt) u.voice = vozPt;
+      let feito = false; const ok = () => { if (!feito){ feito = true; fim(); } };
+      u.onend = ok; u.onerror = ok;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+      setTimeout(ok, 15000);
+    });
+  }
+
+  let ctx = null;
+  function campainha(){
+    return new Promise(fim => {
+      try{
+        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        const t0 = ctx.currentTime;
+        [[784,0],[1047,0.32],[784,0.64]].forEach(([freq, atraso]) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sine'; o.frequency.value = freq;
+          g.gain.setValueAtTime(0.0001, t0 + atraso);
+          g.gain.exponentialRampToValueAtTime(0.5, t0 + atraso + 0.03);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + atraso + 0.6);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t0 + atraso); o.stop(t0 + atraso + 0.65);
+        });
+        setTimeout(fim, 1400);
+      }catch(e){ fim(); }
+    });
+  }
+
+  const fila = []; let ocupado = false;
+  async function processarFila(){
+    if (ocupado || !fila.length) return;
+    ocupado = true;
+    const c = fila.shift();
+
+    const card = $('pAtual');
+    card.classList.remove('vazio', 'piscar'); void card.offsetWidth; card.classList.add('piscar');
+    card.style.borderColor = c.cor;
+    $('pNome').textContent = c.nome;
+    $('pSetor').textContent = c.setorNome; $('pSetor').style.background = c.cor; $('pSetor').classList.remove('hidden');
+    $('pLocal').replaceChildren('Dirija-se: ', el('b', {}, c.local));
+    $('pLocal').classList.remove('hidden');
+
+    if (hist.dia !== hojeStr()) hist = {dia:hojeStr(), itens:[]};
+    hist.itens = [c, ...hist.itens].slice(0, 30);
+    gravarLocal('ubs-painel-hist', hist); desenharHistorico();
+
+    await campainha();
+    for (let i = 0; i < CONFIG.REPETIR_VOZ; i++){
+      await falar(`${c.nome}. Por favor, dirija-se ${c.fala}.`);
+      await new Promise(r => setTimeout(r, 700));
+    }
+    await new Promise(r => setTimeout(r, 1500));
+    ocupado = false; processarFila();
+  }
+
+  async function manterTelaLigada(){ try{ await navigator.wakeLock.request('screen'); }catch(e){} }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') manterTelaLigada(); });
+
+  conectar({ chamada: p => { if (p && p.nome){ fila.push(p); processarFila(); } } });
+
+  $('btnIniciar').onclick = async () => {
+    $('iniciar').classList.add('hidden');
+    try{ await document.documentElement.requestFullscreen(); }catch(e){}
+    manterTelaLigada();
+    await campainha();
+    await falar('Painel de chamadas ativado.');
+  };
+}
+
+/* =====================================================================
+   RECEPÇÃO
+   ===================================================================== */
+function iniciarRecepcao(){
+  $('recepcao').classList.remove('hidden');
+  const selDestino = $('rDestino');
+  CONFIG.SETORES.forEach(s => selDestino.append(el('option', {value:s.id}, `${s.nome} — ${s.local}`)));
+  $('rNivel').replaceChildren(...[...NIVEIS].reverse().flatMap(n => [
+    el('input', {type:'radio', name:'nivel', id:'nv-' + n.id, value:n.id, checked: n.id === 'normal'}),
+    el('label', {for:'nv-' + n.id, style:`--cor:${n.cor}`}, n.nome)
+  ]));
+  const nivelEscolhido = () => (document.querySelector('input[name=nivel]:checked') || {}).value || 'normal';
+
+  let fila = [];
+  async function carregar(){ try{ fila = await api('fila_listar'); desenhar(); }catch(e){} }
+
+  function desenhar(){
+    const aguardando = fila.filter(p => p.status === 'aguardando');
+    const box = $('rFila'); box.replaceChildren();
+    if (!aguardando.length) box.append(el('p', {class:'vazio'}, 'Ninguém aguardando.'));
+    CONFIG.SETORES.forEach(s => {
+      const lst = ordenar(aguardando.filter(p => p.destino === s.id));
+      if (!lst.length) return;
+      box.append(el('h3', {class:'grupo', style:`border-left-color:${s.cor}`}, `${s.nome} (${lst.length})`));
+      box.append(el('ul', {class:'lista'}, lst.map(p => el('li', {class: p.nivel === 'urgencia' ? 'urgente' : ''},
+        infoPaciente(p),
+        el('div', {class:'acoes-li'},
+          el('select', {class:'mini-sel', title:'Mudar classificação', onchange: e => mover(p.id, 'aguardando', null, e.target.value)},
+            opcoesNivel(p.nivel)),
+          el('select', {class:'mini-sel', title:'Mudar destino', onchange: e => mover(p.id, 'aguardando', e.target.value)},
+            CONFIG.SETORES.map(x => el('option', {value:x.id, selected: x.id === p.destino}, x.nome))),
+          el('button', {class:'btn-x', title:'Remover da fila', onclick: () => {
+            if (confirm(`Remover ${p.nome} da fila?`)) mover(p.id, 'removido');
+          }}, '✕'))
+      ))));
+    });
+
+    const chamados = fila.filter(p => p.status === 'chamado').sort((a,b) => new Date(b.chamado_em) - new Date(a.chamado_em));
+    $('rChamados').replaceChildren(...(chamados.length ? chamados.map(p => el('li', {},
+      el('div', {class:'info'}, el('div', {class:'n'}, p.nome),
+        el('div', {class:'h'}, `${setorPorId(p.chamado_por).nome} · ${hora(p.chamado_em)}`))))
+      : [el('li', {class:'vazio', style:'background:none'}, 'Nenhum paciente em atendimento.')]));
+  }
+
+  async function mover(id, status, destino = null, nivel = null){
+    try{ await api('fila_mover', {p_id:id, p_status:status, p_destino:destino, p_nivel:nivel}); avisarFila(); await carregar(); }
+    catch(e){ toast('Erro ao atualizar. Tente de novo.', 'erro'); }
+  }
+
+  $('rForm').onsubmit = async e => {
+    e.preventDefault();
+    const nome = formatarNome($('rNome').value);
+    if (nome.length < 3){ toast('Digite o nome do paciente.', 'erro'); $('rNome').focus(); return; }
+    const setor = setorPorId(selDestino.value);
+    const repetido = fila.find(p => p.status === 'aguardando' && p.nome.toLowerCase() === nome.toLowerCase());
+    if (repetido && !confirm(`${nome} já está na fila de ${setorPorId(repetido.destino).nome}. Adicionar mesmo assim?`)) return;
+    $('rBtn').disabled = true;
+    try{
+      await api('fila_adicionar', {p_nome:nome, p_destino:setor.id, p_nivel:nivelEscolhido()});
+      toast(`✓ ${nome} entrou na fila de ${setor.nome}`);
+      $('rNome').value = ''; $('nv-normal').checked = true;
+      avisarFila(); await carregar();
+    }catch(err){ toast('Não foi possível adicionar. Verifique a internet.', 'erro'); }
+    $('rBtn').disabled = false; $('rNome').focus();
+  };
+
+  conectar({ fila: carregar });
+  carregar();
+  setInterval(carregar, 20000);       // garantia, caso alguma atualização se perca
+  setInterval(desenhar, 60000);       // atualiza o tempo de espera
+  $('rNome').focus();
+}
+
+function infoPaciente(p){
+  return el('div', {class:'info'},
+    el('div', {class:'n'},
+      p.nivel === 'urgencia' ? el('span', {class:'tag tag-urgencia'}, 'Urgência') : null,
+      p.nivel === 'prioritario' ? el('span', {class:'tag tag-prioritario'}, 'Prioritário') : null,
+      p.nome),
+    el('div', {class:'h'}, `Chegou ${hora(p.criado_em)} · aguardando ${espera(p.ordem)}`));
+}
+
+/* =====================================================================
+   CHAMADA (técnica, médico, enfermeira, microscopista, farmacêutica)
+   ===================================================================== */
+function iniciarChamar(){
+  $('chamar').classList.remove('hidden');
+
+  const sel = $('cSetor'), selEnc = $('cEncDestino');
+  CONFIG.SETORES.forEach(s => {
+    sel.append(el('option', {value:s.id}, `${s.nome} — ${s.local}`));
+    selEnc.append(el('option', {value:s.id}, s.nome));
+  });
+  const salvo = lerLocal('ubs-setor', null);
+  if (salvo && CONFIG.SETORES.some(s => s.id === salvo)) sel.value = salvo;
+  const setorAtual = () => setorPorId(sel.value);
+  function ajustarSetor(){
+    $('cProximo').style.background = setorAtual().cor;
+    // sugere o próximo setor da lista como destino do encaminhamento (ex.: Triagem -> Médico)
+    const i = CONFIG.SETORES.findIndex(s => s.id === sel.value);
+    selEnc.value = (CONFIG.SETORES[i + 1] || CONFIG.SETORES[0]).id;
+  }
+  sel.onchange = () => { gravarLocal('ubs-setor', sel.value); ajustarSetor(); desenhar(); };
+  ajustarSetor();
+
+  let fila = [], ocupado = false;
+  async function carregar(){ try{ fila = await api('fila_listar'); desenhar(); }catch(e){} }
+  const atual = () => fila.filter(p => p.status === 'chamado' && p.chamado_por === setorAtual().id)
+                          .sort((a,b) => new Date(b.chamado_em) - new Date(a.chamado_em))[0];
+  const aguardando = () => ordenar(fila.filter(p => p.status === 'aguardando' && p.destino === setorAtual().id));
+
+  function desenhar(){
+    const s = setorAtual(), a = atual(), lst = aguardando();
+    $('cAtualCard').classList.toggle('hidden', !a);
+    if (a && a.id !== desenhar.ultimoAtual){
+      // ao abrir um novo atendimento, o encaminhamento já sugere a classificação atual do paciente
+      desenhar.ultimoAtual = a.id;
+      $('cEncNivel').replaceChildren(...opcoesNivel(a.nivel));
+    }
+    if (a){
+      $('cAtualCard').style.borderColor = s.cor;
+      $('cAtualNome').textContent = a.nome;
+      $('cAtualInfo').textContent = `Chamado(a) às ${hora(a.chamado_em)}`;
+    }
+    ['cRechamar','cConcluir','cEncaminhar'].forEach(id => $(id).disabled = ocupado);
+    $('cFilaTit').textContent = `Fila de espera — ${s.nome} (${lst.length})`;
+    $('cProximo').disabled = ocupado || !lst.length;
+    $('cProximo').textContent = lst.length ? `📢 CHAMAR PRÓXIMO: ${lst[0].nome}` : 'Ninguém na fila';
+    $('cFila').replaceChildren(...(lst.length ? lst.map((p, i) => el('li', {class: [i === 0 ? 'proximo' : '', p.nivel === 'urgencia' ? 'urgente' : ''].join(' ')},
+      infoPaciente(p),
+      el('button', {class:'btn-sec', disabled: ocupado, onclick: () => chamarPaciente(p)}, '📢 Chamar')))
+      : [el('li', {class:'vazio', style:'background:none'}, 'A recepção ainda não encaminhou ninguém para este setor.')]));
+  }
+
+  async function acao(fn){
+    if (ocupado) return;
+    ocupado = true; desenhar();
+    try{ await fn(); }
+    catch(e){ toast('Não foi possível concluir. Verifique a internet e tente de novo.', 'erro'); }
+    setTimeout(() => { ocupado = false; desenhar(); }, 1500);
+  }
+  const avisoChamada = nome => paineisOnline > 0
+    ? toast(`✓ ${nome} chamado(a)`) : toast('Chamado, mas o painel da TV parece desligado.', 'erro');
+
+  const chamarPaciente = p => acao(async () => {
+    const s = setorAtual();
+    const r = await api('fila_chamar', {p_id:p.id, p_setor:s.id});
+    if (!r || !r.id){ toast('Esse paciente já foi chamado por outra pessoa.', 'erro'); await carregar(); return; }
+    await anunciar(r.nome, s);
+    avisoChamada(r.nome);
+    avisarFila(); await carregar();
+  });
+
+  $('cProximo').onclick = () => { const p = aguardando()[0]; if (p) chamarPaciente(p); };
+
+  $('cRechamar').onclick = () => acao(async () => {
+    const a = atual(); if (!a) return;
+    await anunciar(a.nome, setorAtual());
+    avisoChamada(a.nome);
+  });
+
+  $('cConcluir').onclick = () => acao(async () => {
+    const a = atual(); if (!a) return;
+    await api('fila_mover', {p_id:a.id, p_status:'atendido', p_destino:null});
+    toast(`✓ Atendimento de ${a.nome} concluído`);
+    avisarFila(); await carregar();
+  });
+
+  $('cEncaminhar').onclick = () => acao(async () => {
+    const a = atual(); if (!a) return;
+    const destino = setorPorId(selEnc.value);
+    if (destino.id === setorAtual().id){ toast('Escolha outro setor para encaminhar.', 'erro'); return; }
+    const nivel = $('cEncNivel').value;
+    await api('fila_mover', {p_id:a.id, p_status:'aguardando', p_destino:destino.id, p_nivel:nivel});
+    toast(`✓ ${a.nome} encaminhado(a) para ${destino.nome}` + (nivel !== 'normal' ? ` (${NIVEIS.find(n => n.id === nivel).nome})` : ''));
+    avisarFila(); await carregar();
+  });
+
+  $('cManual').onsubmit = e => {
+    e.preventDefault();
+    const nome = formatarNome($('cManualNome').value);
+    if (nome.length < 3){ toast('Digite o nome do paciente.', 'erro'); return; }
+    acao(async () => {
+      const s = setorAtual();
+      const novo = await api('fila_adicionar', {p_nome:nome, p_destino:s.id, p_nivel:'normal'});
+      await api('fila_chamar', {p_id:novo.id, p_setor:s.id});
+      await anunciar(nome, s);
+      avisoChamada(nome);
+      $('cManualNome').value = '';
+      avisarFila(); await carregar();
+    });
+  };
+
+  conectar({ fila: carregar });
+  carregar();
+  setInterval(carregar, 20000);
+  setInterval(desenhar, 60000);
+}
+
+iniciar();
+</script>
+</body>
+</html>
