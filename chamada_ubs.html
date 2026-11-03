@@ -18,19 +18,21 @@
   .dot.on{background:var(--ok)}
 
   /* ================= PAINEL (TV) ================= */
-  #painel{display:grid;grid-template-rows:auto 1fr auto;height:100vh;padding:2vh 3vw;gap:2vh}
+  #painel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100vh;padding:2vh 3vw;gap:2vh}
   .p-topo{display:flex;justify-content:space-between;align-items:center}
   .p-topo h1{font-size:3.2vh;font-weight:700;letter-spacing:.5px}
   .p-relogio{font-size:4.5vh;font-weight:700;font-variant-numeric:tabular-nums}
   .p-data{font-size:2vh;color:var(--muted);text-align:right}
   .p-corpo{display:grid;grid-template-columns:2.2fr 1fr;gap:2vw;min-height:0}
-  .p-atual{background:var(--card);border-radius:3vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4vh 3vw;border:4px solid transparent;transition:border-color .3s}
+  .p-atual{background:var(--card);border-radius:3vh;overflow:hidden;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4vh 3vw;border:4px solid transparent;transition:border-color .3s}
   .p-atual .rot{font-size:3vh;color:var(--muted);text-transform:uppercase;letter-spacing:4px}
   .p-atual .nome{font-size:9vh;font-weight:800;line-height:1.1;margin:3vh 0;word-break:break-word}
   .p-atual .setor{font-size:4vh;font-weight:700;padding:1.2vh 3vw;border-radius:100px;color:#fff}
   .p-atual .local{font-size:3.4vh;margin-top:2.5vh;color:var(--muted)}
   .p-atual .local b{color:var(--txt)}
   .p-atual.vazio .nome{font-size:5vh;color:var(--muted);font-weight:600}
+  .p-nivel{font-size:3.2vh;font-weight:800;padding:.8vh 2.4vw;border-radius:1.2vh;margin-top:2vh;text-transform:uppercase;letter-spacing:3px;color:#fff}
+  .p-hist .tagn{display:inline-block;font-size:1.6vh;font-weight:800;padding:.2vh .7vw;border-radius:.6vh;margin-right:.6vw;color:#fff;text-transform:uppercase;vertical-align:middle}
   .piscar{animation:piscar 1s ease-in-out 4}
   @keyframes piscar{0%,100%{transform:scale(1)}50%{transform:scale(1.03);box-shadow:0 0 60px rgba(255,255,255,.25)}}
   .p-hist{background:var(--card);border-radius:3vh;padding:3vh 1.5vw;display:flex;flex-direction:column;min-height:0}
@@ -40,9 +42,33 @@
   .p-hist li .n{font-size:3vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .p-hist li .s{font-size:2.1vh;color:var(--muted);margin-top:.4vh}
   .p-rodape{display:flex;justify-content:space-between;font-size:1.8vh;color:var(--muted)}
+  .p-view{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%}
+  /* ----- Previsão do tempo ----- */
+  #pClima{justify-content:center;gap:1.8vh;color:var(--txt)}
+  #pClima .cl-agora *{color:var(--txt)}
+  .cl-local{font-size:2.6vh;color:var(--muted);text-transform:uppercase;letter-spacing:3px}
+  .cl-agora{display:flex;align-items:center;gap:3vw}
+  .cl-icone{font-size:11vh;line-height:1}
+  .cl-temp{font-size:11vh;font-weight:800;line-height:1}
+  .cl-desc{font-size:3.4vh;font-weight:700;margin-top:.6vh}
+  #pClima .cl-max{font-size:2.3vh;color:var(--muted);margin-top:.6vh}
+  .cl-detalhes{display:flex;gap:1.2vw;flex-wrap:wrap;justify-content:center}
+  .cl-detalhes div{background:var(--card2);border-radius:1.5vh;padding:.9vh 1.4vw;font-size:2.1vh;color:var(--muted)}
+  .cl-detalhes b{color:var(--txt);font-size:2.5vh;margin-left:.4vw}
+  .cl-faixa{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:1vw;width:100%}
+  .cl-faixa > div{background:var(--card2);border-radius:1.5vh;padding:.8vh .5vw;text-align:center;font-size:2vh;color:var(--muted)}
+  .cl-faixa .i{font-size:3.4vh;margin:.3vh 0}
+  .cl-faixa .t{font-size:2.5vh;font-weight:700;color:var(--txt)}
+  .cl-faixa .c{font-size:1.9vh;color:#7dd3fc}
+  .cl-tit{font-size:1.8vh;color:var(--muted);text-transform:uppercase;letter-spacing:2px;align-self:flex-start;margin-bottom:-1vh}
+  .cl-rodape{font-size:1.6vh;color:var(--muted)}
   #iniciar{position:fixed;inset:0;background:rgba(5,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:10;text-align:center;padding:20px}
   #iniciar button{font-size:28px;padding:22px 48px;border:0;border-radius:16px;background:var(--azul);color:#fff;font-weight:700;cursor:pointer}
   #iniciar p{color:var(--muted);max-width:520px;line-height:1.5}
+  .voz-box{display:flex;flex-direction:column;gap:8px;width:100%;max-width:520px;text-align:left}
+  .voz-box select{font-size:16px}
+  #iniciar .voz-box button{font-size:16px;padding:10px 16px;background:var(--card2);border:1px solid var(--borda);font-weight:600}
+  .voz-aviso{font-size:13px;color:var(--prior);min-height:1em}
 
   /* ================= TELAS DE TRABALHO ================= */
   .tela{max-width:720px;margin:0 auto;padding:20px 16px 40px}
@@ -125,6 +151,12 @@
 <!-- ============ PAINEL DA TV ============ -->
 <div id="iniciar" class="hidden">
   <h2 style="font-size:32px">Painel de Chamadas</h2>
+  <div class="voz-box">
+    <label for="selVoz">Voz do anúncio</label>
+    <select id="selVoz"></select>
+    <button id="btnTestar" type="button">🔊 Testar voz</button>
+    <div class="voz-aviso" id="vozAviso"></div>
+  </div>
   <button id="btnIniciar">▶ Iniciar painel</button>
   <p>O navegador só libera o som depois de um clique. Clique uma vez ao ligar a TV; o painel entra em tela cheia e fica pronto para falar os nomes.</p>
 </div>
@@ -136,10 +168,14 @@
   </div>
   <div class="p-corpo">
     <div class="p-atual vazio" id="pAtual">
-      <div class="rot">Paciente</div>
-      <div class="nome" id="pNome">Aguardando chamadas…</div>
-      <div class="setor hidden" id="pSetor"></div>
-      <div class="local hidden" id="pLocal"></div>
+      <div class="p-view" id="pChamada">
+        <div class="rot">Paciente</div>
+        <div class="p-nivel hidden" id="pNivel"></div>
+        <div class="nome" id="pNome">Aguardando chamadas…</div>
+        <div class="setor hidden" id="pSetor"></div>
+        <div class="local hidden" id="pLocal"></div>
+      </div>
+      <div class="p-view hidden" id="pClima"></div>
     </div>
     <div class="p-hist">
       <h2>Últimas chamadas</h2>
@@ -236,26 +272,44 @@
    CONFIGURAÇÃO — edite somente este bloco
    ===================================================================== */
 const CONFIG = {
-  SUPABASE_URL: 'https://SEU-PROJETO.supabase.co',
-  SUPABASE_ANON_KEY: 'COLE_AQUI_A_CHAVE_ANON',
+  SUPABASE_URL: "https://thvmevgwcagwuopvoxum.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRodm1ldmd3Y2Fnd3VvcHZveHVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwMTg4NDMsImV4cCI6MjEwNzU5NDg0M30.MNFN5fyoz9XHYmUNPU9ya8u5PdXJvY3g-maKqQB9A5c",
 
   // Identificador da unidade (pode ser simples). A senha é definida no arquivo SQL.
   CODIGO_UBS: 'ubs-minha-unidade',
 
-  NOME_UBS: 'UBS — Unidade Básica de Saúde',
+  NOME_UBS: 'UBS — José Carlos Medani',
+  // Frase falada na TV. {nome} = nome do paciente, {local} = fim da frase do setor ('fala' abaixo)
+  FRASE_VOZ: 'Atenção! Paciente: {nome}. Compareça {local}.',
+  // Voz preferida (parte do nome). As vozes 'Natural' do Microsoft Edge soam humanas:
+  // 'Francisca' (feminina), 'Thalita' (feminina), 'Antonio' (masculina). Deixe '' para escolher na TV.
+  VOZ_PREFERIDA: 'Francisca',
   REPETIR_VOZ: 2,          // quantas vezes o nome é falado
+
+  // Previsão do tempo exibida na TV enquanto ninguém está sendo chamado (dados: Open-Meteo, grátis)
+  CLIMA: {
+    ATIVO: true,
+    NOME: 'Jacinópolis — Nova Mamoré/RO',
+    // Coordenadas exatas: no Google Maps, clique com o botão direito no local e copie os números.
+    // Deixe null para o sistema procurar pelo nome abaixo.
+    LAT: -10.26687,
+    LON: -64.28504,
+    BUSCA: ['Jacinópolis', 'Jacynópolis'],
+  },
+  TEMPO_DESTAQUE_SEG: 60,  // segundos que o nome fica na tela antes de voltar para a previsão
   VELOCIDADE_VOZ: 0.9,     // 0.5 (lento) a 1.5 (rápido)
   HISTORICO_TV: 6,         // nomes mostrados em "Últimas chamadas"
 
-  // Cada linha é um setor. 'fala' é o final da frase: "Maria da Silva, dirija-se + fala".
+  // Cada linha é um setor. 'fala' completa a frase: "Compareça + fala" (ex.: compareça à sala de triagem).
   // O primeiro da lista é o destino padrão na recepção.
   // Se houver dois médicos ao mesmo tempo, crie um setor para cada consultório.
   SETORES: [
-    { id:'triagem',     nome:'Triagem',          local:'Sala de Triagem',           fala:'à sala de triagem',            cor:'#2563eb' },
-    { id:'medico',      nome:'Consulta Médica',  local:'Consultório Médico',        fala:'ao consultório médico',        cor:'#16a34a' },
-    { id:'prenatal',    nome:'Pré-Natal',        local:'Consultório de Enfermagem', fala:'ao consultório de enfermagem', cor:'#db2777' },
-    { id:'microscopia', nome:'Microscopia',      local:'Laboratório',               fala:'ao laboratório',               cor:'#ea580c' },
-    { id:'farmacia',    nome:'Farmácia',         local:'Farmácia',                  fala:'à farmácia',                   cor:'#7c3aed' },
+    // 'local' aparece na TV; 'fala' é o que a voz diz (escreva "doutor" por extenso para a voz ler certo).
+    { id:'triagem',     nome:'Triagem',          local:'Sala de Triagem · Técnica Natiele',             fala:'à sala de triagem, com a técnica Natiele',                cor:'#2563eb' },
+    { id:'medico',      nome:'Consulta Médica',  local:'Consultório Médico · Dr. Caique',               fala:'ao consultório médico, com o doutor Caique',              cor:'#16a34a' },
+    { id:'prenatal',    nome:'Pré-Natal',        local:'Consultório de Enfermagem · Enf. Antonieta',    fala:'ao consultório de enfermagem, com a enfermeira Antonieta', cor:'#db2777' },
+    { id:'microscopia', nome:'Microscopia',      local:'Laboratório · Brasilina',                       fala:'ao laboratório, com a microscopista Brasilina',           cor:'#ea580c' },
+    { id:'farmacia',    nome:'Farmácia',         local:'Farmácia · Dona Lúcia',                         fala:'à farmácia, com a dona Lúcia',                            cor:'#7c3aed' },
   ]
 };
 /* ===================================================================== */
@@ -302,6 +356,8 @@ const NIVEIS = [
   { id:'prioritario', nome:'Prioritário', cor:'#f59e0b' },
   { id:'normal',      nome:'Normal',      cor:'#64748b' },
 ];
+const nivelPorId = id => NIVEIS.find(n => n.id === id) || NIVEIS.find(n => n.id === 'normal');
+const tagNivelTV = id => { const n = nivelPorId(id); return el('span', {class:'tagn', style:`background:${n.cor}`}, n.nome); };
 const pesoNivel = n => { const i = NIVEIS.findIndex(x => x.id === n); return i < 0 ? NIVEIS.length : i; };
 const ordenar = lista => [...lista].sort((a,b) => (pesoNivel(a.nivel) - pesoNivel(b.nivel)) || (new Date(a.ordem) - new Date(b.ordem)));
 const opcoesNivel = atual => NIVEIS.map(n => el('option', {value:n.id, selected: n.id === atual}, n.nome));
@@ -357,9 +413,9 @@ function atualizarStatus(){
   document.querySelectorAll('.statusTxt').forEach(s => s.textContent = txt);
 }
 async function avisarFila(){ try{ await canal.send({type:'broadcast', event:'fila', payload:{t:Date.now()}}); }catch(e){} }
-async function anunciar(nome, setor){
+async function anunciar(nome, setor, nivel = 'normal'){
   const payload = {
-    id: Date.now() + '-' + Math.random().toString(36).slice(2,6), nome, ts: Date.now(),
+    id: Date.now() + '-' + Math.random().toString(36).slice(2,6), nome, nivel: nivel || 'normal', ts: Date.now(),
     setorId: setor.id, setorNome: setor.nome, local: setor.local, fala: setor.fala, cor: setor.cor
   };
   const r = await canal.send({type:'broadcast', event:'chamada', payload});
@@ -435,18 +491,42 @@ function iniciarPainel(){
     $('pHist').replaceChildren(...hist.itens.slice(0, CONFIG.HISTORICO_TV).map(c =>
       el('li', {style:`border-left-color:${c.cor}`},
         el('div', {class:'n'}, c.nome),
-        el('div', {class:'s'}, `${c.setorNome} · ${hora(c.ts)}`))));
+        el('div', {class:'s'}, tagNivelTV(c.nivel), `${c.setorNome} · ${hora(c.ts)}`))));
   }
 
+  // ---- Voz: prefere vozes neurais ("Natural"/"Online"), que soam como uma pessoa ----
   let vozPt = null;
+  const pontuar = x => (/natural/i.test(x.name) ? 100 : 0) + (/online/i.test(x.name) ? 50 : 0)
+                     + (/pt[-_]BR/i.test(x.lang) ? 20 : 0) + (/google/i.test(x.name) ? 10 : 0);
   function carregarVozes(){
-    const v = speechSynthesis.getVoices();
-    vozPt = v.find(x => /pt[-_]BR/i.test(x.lang) && /google|francisca|maria|luciana|thalita/i.test(x.name))
-         || v.find(x => /pt[-_]BR/i.test(x.lang))
-         || v.find(x => /^pt/i.test(x.lang)) || null;
+    const lista = speechSynthesis.getVoices();
+    const todas = lista.filter(x => /^pt/i.test(x.lang)).sort((a,b) => pontuar(b) - pontuar(a));
+    if (!todas.length){
+      vozPt = null;
+      $('selVoz').replaceChildren(el('option', {}, lista.length ? 'Nenhuma voz em português neste navegador' : 'Nenhuma voz disponível neste navegador'));
+      $('vozAviso').textContent = navigator.brave
+        ? 'O Brave bloqueia as vozes do navegador. Abra o painel no Microsoft Edge (voz humana) ou no Google Chrome.'
+        : 'Este navegador não tem voz em português. Abra o painel no Microsoft Edge (voz humana) ou no Google Chrome.';
+      return;
+    }
+    const salva = lerLocal('ubs-voz', '');
+    const pref  = (CONFIG.VOZ_PREFERIDA || '').toLowerCase();
+    vozPt = todas.find(x => x.name === salva)
+         || (pref && todas.find(x => x.name.toLowerCase().includes(pref) && /natural|online/i.test(x.name)))
+         || (pref && todas.find(x => x.name.toLowerCase().includes(pref)))
+         || todas[0];
+    $('selVoz').replaceChildren(...todas.map(x => el('option', {value:x.name, selected: x === vozPt},
+      (/natural/i.test(x.name) ? '★ ' : '') + x.name.replace(/^Microsoft\s+/,'').replace(/\s*-\s*Portuguese.*$/,''))));
+    $('vozAviso').textContent = todas.some(x => /natural/i.test(x.name)) ? ''
+      : 'Este navegador não tem vozes naturais. Para voz humana, abra o painel no Microsoft Edge.';
   }
   carregarVozes();
   speechSynthesis.onvoiceschanged = carregarVozes;
+  $('selVoz').onchange = () => {
+    vozPt = speechSynthesis.getVoices().find(x => x.name === $('selVoz').value) || vozPt;
+    gravarLocal('ubs-voz', $('selVoz').value);
+  };
+  $('btnTestar').onclick = () => falar(CONFIG.FRASE_VOZ.replace('{nome}', 'Maria da Silva').replace('{local}', CONFIG.SETORES[0].fala));
 
   function falar(texto){
     return new Promise(fim => {
@@ -487,11 +567,15 @@ function iniciarPainel(){
     const c = fila.shift();
 
     const card = $('pAtual');
+    clearTimeout(voltarClima);
+    $('pClima').classList.add('hidden'); $('pChamada').classList.remove('hidden');
     card.classList.remove('vazio', 'piscar'); void card.offsetWidth; card.classList.add('piscar');
     card.style.borderColor = c.cor;
     $('pNome').textContent = c.nome;
+    const nv = nivelPorId(c.nivel);
+    $('pNivel').textContent = nv.nome; $('pNivel').style.background = nv.cor; $('pNivel').classList.remove('hidden');
     $('pSetor').textContent = c.setorNome; $('pSetor').style.background = c.cor; $('pSetor').classList.remove('hidden');
-    $('pLocal').replaceChildren('Dirija-se: ', el('b', {}, c.local));
+    $('pLocal').replaceChildren('Compareça: ', el('b', {}, c.local));
     $('pLocal').classList.remove('hidden');
 
     if (hist.dia !== hojeStr()) hist = {dia:hojeStr(), itens:[]};
@@ -500,12 +584,103 @@ function iniciarPainel(){
 
     await campainha();
     for (let i = 0; i < CONFIG.REPETIR_VOZ; i++){
-      await falar(`${c.nome}. Por favor, dirija-se ${c.fala}.`);
+      await falar(CONFIG.FRASE_VOZ.replace('{nome}', c.nome).replace('{local}', c.fala));
       await new Promise(r => setTimeout(r, 700));
     }
     await new Promise(r => setTimeout(r, 1500));
-    ocupado = false; processarFila();
+    ocupado = false;
+    if (fila.length) processarFila();
+    else voltarClima = setTimeout(mostrarClima, Math.max(0, CONFIG.TEMPO_DESTAQUE_SEG * 1000 - 8000));
   }
+
+  // ---------------- Previsão do tempo ----------------
+  let voltarClima = null, dadosClima = null;
+  const WMO = {0:['Céu limpo','☀️','🌙'],1:['Predomínio de sol','🌤️','🌙'],2:['Parcialmente nublado','⛅','☁️'],3:['Nublado','☁️','☁️'],
+    45:['Neblina','🌫️'],48:['Neblina','🌫️'],51:['Garoa fraca','🌦️'],53:['Garoa','🌦️'],55:['Garoa forte','🌧️'],
+    61:['Chuva fraca','🌦️'],63:['Chuva','🌧️'],65:['Chuva forte','🌧️'],66:['Chuva congelante','🌧️'],67:['Chuva congelante','🌧️'],
+    71:['Neve','🌨️'],73:['Neve','🌨️'],75:['Neve','🌨️'],77:['Neve','🌨️'],80:['Pancadas de chuva','🌦️'],81:['Pancadas de chuva','🌧️'],
+    82:['Pancadas fortes','⛈️'],85:['Neve','🌨️'],86:['Neve','🌨️'],95:['Trovoadas','⛈️'],96:['Trovoadas com granizo','⛈️'],99:['Trovoadas com granizo','⛈️']};
+  const tempoDesc = c => (WMO[c] || ['—'])[0];
+  const tempoIcone = (c, dia = 1) => { const w = WMO[c] || ['', '🌡️']; return (!dia && w[2]) ? w[2] : w[1]; };
+
+  async function coordenadas(){
+    const C = CONFIG.CLIMA;
+    if (C.LAT != null && C.LON != null) return {lat:C.LAT, lon:C.LON};
+    const cache = lerLocal('ubs-clima-coord', null);
+    if (cache && cache.busca === C.BUSCA.join('|')) return cache;
+    for (const nome of C.BUSCA){
+      try{
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nome)}&count=10&language=pt&countryCode=BR`);
+        const j = await r.json();
+        const achou = (j.results || []).find(x => /rond/i.test(x.admin1 || ''));
+        if (achou){
+          const c = {lat:achou.latitude, lon:achou.longitude, busca:C.BUSCA.join('|')};
+          gravarLocal('ubs-clima-coord', c); return c;
+        }
+      }catch(e){}
+    }
+    return {lat:-10.4019, lon:-65.3267};   // não achou: usa a sede de Nova Mamoré
+  }
+
+  async function atualizarClima(){
+    if (!CONFIG.CLIMA.ATIVO) return;
+    try{
+      const {lat, lon} = await coordenadas();
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon
+        + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day'
+        + '&hourly=temperature_2m,weather_code,precipitation_probability,is_day'
+        + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+        + '&timezone=America%2FPorto_Velho&forecast_days=5';
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      dadosClima = await r.json(); dadosClima.lido = Date.now();
+      if (!$('pClima').classList.contains('hidden') || $('pAtual').classList.contains('vazio')) mostrarClima();
+    }catch(e){ /* sem internet: mantém a última previsão */ }
+  }
+
+  function mostrarClima(){
+    const d = dadosClima;
+    if (!d || !d.current){ return; }
+    const card = $('pAtual');
+    card.classList.add('vazio'); card.style.borderColor = 'transparent';
+    $('pChamada').classList.add('hidden');
+    const cur = d.current, dia = d.daily, h = d.hourly;
+    const semana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    // próximas horas (a cada 3h a partir da próxima hora)
+    const agoraIdx = h.time.findIndex(t => new Date(t) > new Date(cur.time));
+    const horas = [0,3,6,9,12].map(k => agoraIdx + k).filter(i => i >= 0 && i < h.time.length);
+    const dias = [1,2,3,4].filter(i => i < dia.time.length);
+    $('pClima').replaceChildren(
+      el('div', {class:'cl-local'}, 'Previsão do tempo · ' + CONFIG.CLIMA.NOME),
+      el('div', {class:'cl-agora'},
+        el('div', {class:'cl-icone'}, tempoIcone(cur.weather_code, cur.is_day)),
+        el('div', {},
+          el('div', {class:'cl-temp'}, Math.round(cur.temperature_2m) + '°'),
+          el('div', {class:'cl-desc'}, tempoDesc(cur.weather_code)),
+          el('div', {class:'cl-max'}, `Hoje: máx ${Math.round(dia.temperature_2m_max[0])}° · mín ${Math.round(dia.temperature_2m_min[0])}°`))),
+      el('div', {class:'cl-detalhes'},
+        el('div', {}, 'Sensação', el('b', {}, Math.round(cur.apparent_temperature) + '°')),
+        el('div', {}, 'Umidade', el('b', {}, Math.round(cur.relative_humidity_2m) + '%')),
+        el('div', {}, 'Vento', el('b', {}, Math.round(cur.wind_speed_10m) + ' km/h')),
+        el('div', {}, 'Chuva hoje', el('b', {}, (dia.precipitation_probability_max[0] ?? 0) + '%'))),
+      el('div', {class:'cl-tit'}, 'Próximas horas'),
+      el('div', {class:'cl-faixa'}, horas.map(i => el('div', {},
+        el('div', {}, h.time[i].slice(11,16)),
+        el('div', {class:'i'}, tempoIcone(h.weather_code[i], h.is_day[i])),
+        el('div', {class:'t'}, Math.round(h.temperature_2m[i]) + '°'),
+        el('div', {class:'c'}, '💧 ' + (h.precipitation_probability[i] ?? 0) + '%')))),
+      el('div', {class:'cl-tit'}, 'Próximos dias'),
+      el('div', {class:'cl-faixa'}, dias.map(i => el('div', {},
+        el('div', {}, semana[new Date(dia.time[i] + 'T12:00').getDay()]),
+        el('div', {class:'i'}, tempoIcone(dia.weather_code[i])),
+        el('div', {class:'t'}, `${Math.round(dia.temperature_2m_max[i])}° / ${Math.round(dia.temperature_2m_min[i])}°`),
+        el('div', {class:'c'}, '💧 ' + (dia.precipitation_probability_max[i] ?? 0) + '%')))),
+      el('div', {class:'cl-rodape'}, 'Atualizado às ' + hora(d.lido) + ' · Open-Meteo')
+    );
+    $('pClima').classList.remove('hidden');
+  }
+  atualizarClima();
+  setInterval(atualizarClima, 15 * 60 * 1000);   // atualiza a cada 15 minutos
 
   async function manterTelaLigada(){ try{ await navigator.wakeLock.request('screen'); }catch(e){} }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') manterTelaLigada(); });
@@ -669,7 +844,7 @@ function iniciarChamar(){
     const s = setorAtual();
     const r = await api('fila_chamar', {p_id:p.id, p_setor:s.id});
     if (!r || !r.id){ toast('Esse paciente já foi chamado por outra pessoa.', 'erro'); await carregar(); return; }
-    await anunciar(r.nome, s);
+    await anunciar(r.nome, s, r.nivel);
     avisoChamada(r.nome);
     avisarFila(); await carregar();
   });
@@ -678,7 +853,7 @@ function iniciarChamar(){
 
   $('cRechamar').onclick = () => acao(async () => {
     const a = atual(); if (!a) return;
-    await anunciar(a.nome, setorAtual());
+    await anunciar(a.nome, setorAtual(), a.nivel);
     avisoChamada(a.nome);
   });
 
@@ -707,7 +882,7 @@ function iniciarChamar(){
       const s = setorAtual();
       const novo = await api('fila_adicionar', {p_nome:nome, p_destino:s.id, p_nivel:'normal'});
       await api('fila_chamar', {p_id:novo.id, p_setor:s.id});
-      await anunciar(nome, s);
+      await anunciar(nome, s, 'normal');
       avisoChamada(nome);
       $('cManualNome').value = '';
       avisarFila(); await carregar();
